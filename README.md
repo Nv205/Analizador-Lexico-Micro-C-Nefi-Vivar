@@ -117,6 +117,12 @@ Una vez que la ventana "MicroC Compiler" esté abierta, verifica los siguientes 
 
 
 
+**Video Demostrativo:**
+
+https://www.youtube.com/watch?v=GyQ89cy_juM
+
+
+
 
 
 
