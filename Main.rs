@@ -69,7 +69,7 @@ impl UnidadesLexicas {
             106..=109 => "Función de Cadena <string.h>".to_string(),
             110..=112 => "Función Matemática <math.h>".to_string(),
             113..=115 => "Función de Consola <conio.h>".to_string(),
-            116 => "Macro Constante (Librería Estándar)".to_string(), // CORRECCIÓN: Separado para evitar solapamiento
+            116 => "Macro Constante (Librería Estándar)".to_string(), 
             200 | 201 => "Directiva del Preprocesador".to_string(),
             202 => "Cuerpo de la Definición Macro (#define)".to_string(),
             205 => "Cabecera de Biblioteca (Header)".to_string(),
@@ -356,7 +356,7 @@ struct MicroCApp {
     code_content: String,
     tokens: Vec<TokenData>,
     errores_log: Vec<String>,
-    archivo: String,          // CORRECCIÓN [Contrato UML]: Campo "+Archivo: String" explícito de frmEditor
+    archivo: String,          
     is_modified: bool,
     analizador: AnalizadorLexico,
     ultimo_titulo: String,
@@ -389,7 +389,7 @@ impl MicroCApp {
         if let Some(path) = rfd::FileDialog::new().add_filter("Código C", &["c", "h"]).pick_file() {
             if let Ok(contenido) = fs::read_to_string(&path) {
                 self.code_content = contenido;
-                self.archivo = path.to_string_lossy().into_owned(); // Sincronización con el String del UML
+                self.archivo = path.to_string_lossy().into_owned(); 
                 self.is_modified = false;
                 self.tokens.clear();
                 self.errores_log.clear();
@@ -453,7 +453,7 @@ impl eframe::App for MicroCApp {
         // Barra de Herramientas del Menú (Alineado con Figura V: Archivos, Editar, Compilar, Ayuda)
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                ui.menu_button("Archivos", |ui| { // Cambiado de "Archivo" a "Archivos" según Figura V
+                ui.menu_button("Archivos", |ui| { 
                     if ui.button("Nuevo Archivo").clicked() { self.opc_nuevo_click(); ui.close_menu(); }
                     if ui.button("Abrir Archivo").clicked() { self.opc_abrir_click(); ui.close_menu(); }
                     if ui.button("Guardar").clicked() { self.opc_guardar_click(); ui.close_menu(); }
@@ -462,13 +462,11 @@ impl eframe::App for MicroCApp {
                     if ui.button("Salir").clicked() { self.opc_salir_click(ctx); ui.close_menu(); }
                 });
 
-                // CORRECCIÓN [Figura V]: Menú Editar agregado para consistencia visual
                 ui.menu_button("Editar", |ui| {
                     if ui.button("Deshacer").clicked() { ui.close_menu(); }
                     if ui.button("Rehacer").clicked() { ui.close_menu(); }
                 });
                 
-                // CORRECCIÓN [Figura V]: Menú Compilar agregado envolviendo el disparador lógico
                 ui.menu_button("Compilar", |ui| {
                     if ui.button("🚀 Compilar").clicked() {
                         self.opc_compilar_click();
@@ -476,9 +474,14 @@ impl eframe::App for MicroCApp {
                     }
                 });
 
-                // CORRECCIÓN [Figura V]: Menú Ayuda agregado para consistencia visual
+
                 ui.menu_button("Ayuda", |ui| {
-                    if ui.button("Acerca de MicroC...").clicked() { ui.close_menu(); }
+                    if ui.button("🌐 Manual de Usuario / Documentación").clicked() {
+                        ctx.open_url(egui::OpenUrl::new_tab("https://github.com/Nv205/Analizador-Lexico-Micro-C-Nefi-Vivar.git")); 
+                        ui.close_menu();
+                    }
+                    
+
                 });
             });
         });
