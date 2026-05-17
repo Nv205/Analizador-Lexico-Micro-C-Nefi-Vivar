@@ -1,125 +1,481 @@
-# Pre-compilador-micro-c-Nefi-Vivar
+# Compilador-Analixador Lexico-Nefi-Vivar
 
-Nombre: Nefi Andŕe Vivar Castañeda
-Carne: 202425505
-Curso: Automatas y Lenguajes
-Proyecto Compilador micro C
+## Información General
 
+**Nombre:** Nefi André Vivar Castañeda  
+**Carné:** 202425505  
+**Curso:** Autómatas y Lenguajes  
+**Proyecto:** Proyecto Compilador: Analizador Lexico 
 
-**Descripcion:**
+---
 
-El proyecto actual es el diseño de un pre-compilador micro c para el curso de Automatas y Lenguajes, actualmente solo contiene las funciones implementadas en base a la tarea del diseño del pre-compilador para el 22/02/26. con todos los botones del documento de pre-compilador implementadas, pero solo las funcionales que pide el documento hasta el momento, como el boton dalir, guardar, abrir, etc...
+# Descripción
 
+El proyecto actual consiste en el desarrollo de un Analizador Lexico  micro-C utilizando Rust y una interfaz gráfica moderna basada en `egui/eframe`.
 
-**Tecnologias usadas:**
+Actualmente el programa implementa la primera etapa de un compilador: el análisis léxico. El sistema es capaz de leer código fuente escrito en C, recorrerlo carácter por carácter y clasificar los lexemas encontrados mediante autómatas léxicos especializados.
 
-Lenguaje: Rust
+El compilador implementa:
 
-1. eframe / egui
+- Interfaz gráfica interactiva.
+- Editor de código fuente.
+- Sistema de apertura y guardado de archivos `.c` y `.h`.
+- Analizador léxico funcional.
+- Generación de tabla de tokens.
+- Consola de errores léxicos.
+- Identificación de:
+  - Palabras reservadas.
+  - Identificadores.
+  - Números enteros.
+  - Números reales.
+  - Operadores simples y compuestos.
+  - Comentarios.
+  - Literales string.
+  - Literales char.
+  - Directivas del preprocesador.
+  - Headers (`#include <stdio.h>`).
+- Detección de errores léxicos.
+- Estadísticas dinámicas del análisis.
 
-Es el framework principal de la aplicación.
+El funcionamiento interno del compilador está basado en un árbol de decisión y múltiples subautómatas léxicos que permiten reconocer distintos tipos de tokens del lenguaje C.
 
-    Propósito: Se utiliza para crear la interfaz gráfica de usuario (GUI).
+---
 
-    Relación con el PDF: Permite crear el TextBox1 para el código , el TextBox2 para los mensajes y la barra de menús con las opciones de "Archivo", "Editar", "Compilar" y "Ayuda".
+# Funcionalidades Implementadas
 
-    Funcionalidad clave: Maneja el ciclo de vida de la ventana y el renderizado inmediato de los elementos.
+## Gestión de Archivos
 
-2. rfd (Rust Native File Dialogs)
+- Nuevo archivo.
+- Abrir archivos `.c` y `.h`.
+- Guardar.
+- Guardar como.
+- Actualización dinámica del título de ventana.
+- Detección de cambios sin guardar.
 
-    Propósito: Proporciona los cuadros de diálogo nativos del sistema operativo para interactuar con archivos.
+---
 
-    Relación con el PDF: Es esencial para cumplir con la función [Abrir] (punto 4) al buscar archivos con extensión *.C y la función [Guardar] (punto 5), abriendo el cuadro de diálogo para solicitar la ubicación si el archivo es nuevo.
+## Analizador Léxico
 
-3. std::fs (Librería estándar de Rust)
+El compilador implementa un autómata principal encargado de recorrer el código fuente y delegar el reconocimiento de patrones a distintos subautómatas especializados.
 
-    Propósito: Manejo del sistema de archivos del sistema operativo.
+### Reconocimiento de Tokens
 
-    Relación con el PDF: Se utiliza para leer el contenido de los archivos cargados en el TextBox1 y para escribir o sobreescribir el texto cuando el usuario decide guardar sus cambios.
+### Palabras Reservadas
 
-4. std::path::PathBuf
+Ejemplos:
 
-    Propósito: Gestión de rutas de archivos de forma segura entre diferentes sistemas operativos (Windows/Linux).
+```c
+int
+float
+if
+while
+return
+```
 
-    Relación con el PDF: Permite almacenar la ubicación del archivo para cumplir con el requisito 10, donde se debe desplegar la ubicación y nombre del archivo en el título de la ventana.
+---
 
+### Identificadores
 
-**Instrucciones de Ejecución:**
+Ejemplos:
 
-1. Requisitos Previos
+```c
+edad
+contador
+miVariable
+```
 
-Antes de intentar ejecutar el código, asegúrate de tener instalado lo siguiente:
+---
 
-    Rust Toolchain: Debes tener instalado rustup, rustc y cargo. Si no lo tienes, puedes descargarlo desde rustup.rs.
+### Números Enteros y Reales
 
-    Dependencias del Sistema:
+Ejemplos:
 
-        En Windows: Generalmente no requiere pasos adicionales.
+```c
+25
+3.14
+0.5
+```
 
-        En Linux: Podrías necesitar librerías de desarrollo para la interfaz gráfica (como libgtk-3-dev, libssl-dev, y libclang-dev).
+---
 
-2. Configuración del Proyecto (Cargo.toml)
+### Operadores y Delimitadores
 
-Asegúrate de que tu archivo Cargo.toml incluya las dependencias necesarias que hemos discutido para que la interfaz gráfica y los diálogos de archivos funcionen:
-Ini, TOML
+Ejemplos:
 
+```c
++
+-
+==
+>=
+&&
+{
+}
+;
+```
+
+---
+
+### Comentarios
+
+Comentarios de línea:
+
+```c
+// comentario
+```
+
+Comentarios de bloque:
+
+```c
+/* comentario */
+```
+
+---
+
+### Literales String
+
+```c
+"Hola Mundo"
+```
+
+---
+
+### Literales Char
+
+```c
+'A'
+'\n'
+```
+
+---
+
+### Directivas del Preprocesador
+
+```c
+#include
+#define
+```
+
+---
+
+### Librerías/Header
+
+```c
+<stdio.h>
+<math.h>
+```
+
+---
+
+# Arquitectura del Proyecto
+
+## Clase `UnidadesLexicas`
+
+Funciona como la tabla de símbolos del lenguaje.
+
+Responsabilidades:
+
+- Asociar lexemas con tokens.
+- Clasificar tokens.
+- Generar descripciones léxicas.
+
+---
+
+## Clase `AnalizadorLexico`
+
+Es el motor principal del compilador.
+
+Responsabilidades:
+
+- Recorrer el código fuente.
+- Aplicar el árbol de decisión léxico.
+- Ejecutar subautómatas especializados.
+- Generar tokens.
+- Detectar errores léxicos.
+
+### Subautómatas implementados
+
+- `entero_real()`
+- `automata_comentario()`
+- reconocimiento de strings
+- reconocimiento de chars
+- reconocimiento de operadores
+- reconocimiento de identificadores
+
+---
+
+## Clase `MicroCApp`
+
+Controla toda la interfaz gráfica del compilador.
+
+Responsabilidades:
+
+- Editor de código.
+- Menús.
+- Tabla de tokens.
+- Consola de errores.
+- Estadísticas del análisis.
+- Gestión de archivos.
+
+---
+
+# Tecnologías Utilizadas
+
+## Lenguaje Principal
+
+- Rust
+
+---
+
+## Librerías
+
+### 1. eframe / egui
+
+Framework principal de la interfaz gráfica.
+
+Funciones:
+
+- Editor de texto.
+- Tabla de análisis léxico.
+- Consola de errores.
+- Panel de estadísticas.
+- Barra de menús.
+
+---
+
+### 2. rfd (Rust File Dialog)
+
+Permite utilizar cuadros de diálogo nativos del sistema operativo.
+
+Funciones:
+
+- Abrir archivos.
+- Guardar archivos.
+- Guardar como.
+
+---
+
+### 3. std::fs
+
+Manejo del sistema de archivos.
+
+Funciones:
+
+- Lectura de archivos.
+- Escritura de archivos.
+
+---
+
+### 4. std::collections::HashMap
+
+Estructura utilizada para implementar la tabla de tokens del lenguaje.
+
+Funciones:
+
+- Búsqueda rápida de lexemas.
+- Asociación token → descripción.
+
+---
+
+### 5. std::path::PathBuf
+
+Gestión segura de rutas de archivos.
+
+Funciones:
+
+- Compatibilidad multiplataforma.
+- Manejo de rutas de archivos.
+
+---
+
+# Estructura del Analizador Léxico
+
+El compilador sigue el siguiente flujo de análisis:
+
+```text
+Leer carácter
+      ↓
+¿Espacio en blanco?
+      ↓
+¿Comentario?
+      ↓
+¿Cadena?
+      ↓
+¿Literal Char?
+      ↓
+¿Número?
+      ↓
+¿Identificador o palabra reservada?
+      ↓
+¿Operador o símbolo?
+      ↓
+Error léxico
+```
+
+Cada decisión dirige el flujo hacia un autómata especializado encargado de validar el patrón correspondiente.
+
+---
+
+# Requisitos Previos
+
+Antes de ejecutar el proyecto asegúrate de tener instalado:
+
+## Rust Toolchain
+
+Instalar desde:
+
+https://rust-lang.org/es/learn/get-started/
+
+Debe incluir:
+
+- rustup
+- cargo
+- rustc
+
+---
+
+## Dependencias del Sistema
+
+### Windows
+
+Generalmente no requiere configuración adicional.
+
+### Linux
+
+Puede requerir:
+
+```bash
+libgtk-3-dev
+libssl-dev
+libclang-dev
+```
+
+---
+
+# Dependencias del Proyecto
+
+## Cargo.toml
+
+```toml
 [dependencies]
-eframe = "0.22"
-rfd = "0.10"
+eframe = "0.27"
+rfd = "0.14"
+```
 
-3. Pasos para la Ejecución en VS Code
+---
 
-Sigue este orden en la terminal integrada de VS Code (Ctrl + `):
+# Instrucciones de Ejecución
 
-    Limpieza y Verificación: Ejecuta el siguiente comando para verificar que no haya errores de sintaxis sin necesidad de compilar todo el proyecto:
-    Bash
+## 1. Verificar el Proyecto (Abrir desde terminal de Vs-code o cualquier otro editor de codigo.)
 
-    cargo check
+```bash
+cargo check
+```
 
-    Descarga de dependencias y Compilación: La primera vez que lo ejecutes, Cargo descargará todas las librerías. Usa el comando:
-    Bash
+---
 
-    cargo build
+## 2. Compilar el Proyecto
 
-    Ejecución del Pre-Compilador: Para lanzar la ventana de la aplicación, usa:
-    Bash
+```bash
+cargo build
+```
 
-    cargo run
+---
 
-4. Pruebas de Funcionamiento (Basado en la Hoja de Trabajo)
+## 3. Ejecutar el Compilador
 
-Una vez que la ventana "MicroC Compiler" esté abierta, verifica los siguientes puntos exigidos por la Universidad Mesoamericana:
+```bash
+cargo run
+```
 
-    Nuevo: Haz clic en Archivo > Nuevo. El TextBox1 debe limpiarse y permitirte escribir inmediatamente.
+---
 
-    Abrir: Haz clic en Archivo > Abrir y selecciona un archivo con extensión .C. Verifica que el texto se cargue pero no se pueda editar inicialmente.
+# Pruebas de Funcionamiento
 
-    Editar: Haz clic en el botón Editar para desbloquear el TextBox1 y modificar el código cargado.
+## Nuevo Archivo
 
-    Guardar:
+- Limpia el editor.
+- Reinicia tokens y errores.
 
-        Si es un archivo nuevo, debe aparecer el cuadro de diálogo para elegir ubicación.
+---
 
-        Si el archivo ya existía, debe sobreescribirse automáticamente.
+## Abrir Archivo
 
-    Título de Ventana: Observa que en la parte superior aparezca la ruta completa y el nombre del archivo (ej. MicroC Compiler - C:/Proyectos/test.c).
+- Permite cargar archivos `.c` y `.h`.
 
-    Salir: Intenta cerrar la aplicación con cambios sin guardar. Debe aparecer la ventana emergente que creamos preguntando si deseas guardar o salir.
+---
+
+## Guardar
+
+- Guarda automáticamente si el archivo existe.
+- Solicita ubicación si es nuevo.
+
+---
+
+## Compilar
+
+El botón:
+
+```text
+OpcCompilar_Click()
+```
+
+realiza:
+
+- análisis léxico completo,
+- generación de tokens,
+- clasificación léxica,
+- detección de errores,
+- actualización de estadísticas.
+
+---
+
+## Tabla de Tokens
+
+Muestra:
+
+- línea,
+- columna,
+- lexema,
+- token,
+- descripción.
+
+---
+
+## Consola de Errores
+
+Muestra errores como:
+
+```text
+Cadena sin cerrar
+Carácter ilegal
+Número mal formado
+Comentario sin cerrar
+```
+
+---
+
+# Estado Actual del Proyecto
+
+Actualmente el proyecto implementa correctamente la etapa de análisis léxico del compilador Micro C.
+
+Próximas fases posibles:
+
+- Análisis sintáctico.
+- Árbol sintáctico.
+- Tabla de símbolos avanzada.
+- Análisis semántico.
+- Generación de código intermedio.
+- Optimización.
+
+---
 
 
-**Capturas de pantalla**
-
-<img width="907" height="705" alt="imagen" src="https://github.com/user-attachments/assets/c860f6e5-2728-4259-a52d-0b583b175a2f" />
-
-<img width="949" height="721" alt="imagen" src="https://github.com/user-attachments/assets/db742a96-bfcc-402f-a135-93d92887157b" />
-
-<img width="893" height="700" alt="imagen" src="https://github.com/user-attachments/assets/97896db6-2f12-423a-b8dc-3fb342d8c313" />
+# Capturas de Pantalla
 
 
 
-**Video Demostrativo:**
 
-https://www.youtube.com/watch?v=GyQ89cy_juM
+
 
 
 
