@@ -472,6 +472,16 @@ Próximas fases posibles:
 
 # Capturas de Pantalla
 
+<img width="992" height="780" alt="imagen" src="https://github.com/user-attachments/assets/4509f5b8-51e1-4336-9a90-a0931d4e5169" />
+<img width="992" height="780" alt="imagen" src="https://github.com/user-attachments/assets/9f17c72a-6615-46d4-888f-b151bff794e8" />
+<img width="970" height="766" alt="imagen" src="https://github.com/user-attachments/assets/40644b5c-e563-4c7d-b178-5247b148e3f5" />
+<img width="990" height="778" alt="imagen" src="https://github.com/user-attachments/assets/c5dae85d-0da6-49c4-84c4-ff98ac3bf97e" />
+<img width="990" height="778" alt="imagen" src="https://github.com/user-attachments/assets/ccf240ff-87ec-45e8-a209-d8d96514241b" />
+
+#Video Demostrativo
+
+
+
 
 
 
