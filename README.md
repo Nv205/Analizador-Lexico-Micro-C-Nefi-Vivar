@@ -487,6 +487,8 @@ https://youtu.be/kGSAHHee-zs
 
 https://youtu.be/XNcZ2sGYKDk
 
+https://youtu.be/kQQg3jEz-ZM
+
 #Diagrama Fase 2
 
 <img width="1197" height="614" alt="imagen" src="https://github.com/user-attachments/assets/2b255233-8d23-483f-b1eb-c72fd3b19286" />
