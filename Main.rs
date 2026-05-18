@@ -69,7 +69,7 @@ impl UnidadesLexicas {
             106..=109 => "Función de Cadena <string.h>".to_string(),
             110..=112 => "Función Matemática <math.h>".to_string(),
             113..=115 => "Función de Consola <conio.h>".to_string(),
-            116 => "Macro Constante (Librería Estándar)".to_string(), 
+            116 => "Macro Constante (Librería Estándar)".to_string(),
             200 | 201 => "Directiva del Preprocesador".to_string(),
             202 => "Cuerpo de la Definición Macro (#define)".to_string(),
             205 => "Cabecera de Biblioteca (Header)".to_string(),
@@ -79,6 +79,8 @@ impl UnidadesLexicas {
             501 => "Constante Real (Float)".to_string(),
             600 => "Literal String".to_string(),
             601 => "Literal Char".to_string(),
+            700 => "Comentario de Línea (//)".to_string(),        // NUEVO
+            701 => "Comentario de Bloque (/* */)".to_string(),    // NUEVO
             _ => "Token Desconocido / Error".to_string(),
         }
     }
@@ -135,37 +137,17 @@ impl AnalizadorLexico {
         }
     }
 
-    fn automata_comentario(&self, caracteres: &[char], j: &mut usize, en_bloque: &mut bool) -> bool {
-        if *en_bloque {
-            if *j + 1 < caracteres.len() && caracteres[*j] == '*' && caracteres[*j+1] == '/' {
-                *en_bloque = false;
-                *j += 2;
-            } else {
-                *j += 1;
-            }
-            return true;
-        }
-        if *j + 1 < caracteres.len() && caracteres[*j] == '/' {
-            if caracteres[*j+1] == '/' {
-                *j = caracteres.len(); 
-                return true;
-            }
-            if caracteres[*j+1] == '*' {
-                *en_bloque = true;
-                *j += 2;
-                return true;
-            }
-        }
-        false
-    }
-
     fn analizar(&self, codigo: &str) -> (Vec<TokenData>, Vec<String>) {
         let mut tokens_encontrados = Vec::new();
         let mut errores = Vec::new();
+        
+        // Variables de persistencia para el autómata de bloque multilínea
         let mut en_comentario_bloque = false;
         let mut linea_comentario_abierto = 0;
-        let mut esperando_header = false;
+        let mut col_comentario_abierto = 0;
+        let mut lexema_bloque_acumulado = String::new();
 
+        let mut esperando_header = false;
         let codigo_sanitizado = codigo.replace("\r", "");
 
         for (i, linea_texto) in codigo_sanitizado.lines().enumerate() {
@@ -177,28 +159,76 @@ impl AnalizadorLexico {
                 esperando_header = false;
             }
 
+            // Si venimos arrastrando un comentario de bloque de la línea anterior, añadir el salto de línea
+            if en_comentario_bloque && !lexema_bloque_acumulado.is_empty() {
+                lexema_bloque_acumulado.push('\n');
+            }
+
             while j < caracteres.len() {
                 let num_columna = j + 1;
                 let c = caracteres[j];
+
+                // 1. LÓGICA ACTIVA DEL AUTÓMATA DE COMENTARIOS
+                if en_comentario_bloque {
+                    if j + 1 < caracteres.len() && c == '*' && caracteres[j+1] == '/' {
+                        lexema_bloque_acumulado.push('*');
+                        lexema_bloque_acumulado.push('/');
+                        j += 2;
+                        en_comentario_bloque = false;
+
+                        // Emitir el Token de Bloque Completado
+                        tokens_encontrados.push(TokenData {
+                            linea: linea_comentario_abierto,
+                            columna: col_comentario_abierto,
+                            lexema: lexema_bloque_acumulado.clone(),
+                            token_id: 701,
+                            descripcion: self.unidades.get_descripcion_token(701),
+                        });
+                        lexema_bloque_acumulado.clear();
+                    } else {
+                        lexema_bloque_acumulado.push(c);
+                        j += 1;
+                    }
+                    continue;
+                }
+
+                // Detectar inicio de comentario estando fuera de uno
+                if j + 1 < caracteres.len() && c == '/' {
+                    // Caso A: Comentario de Línea
+                    if caracteres[j+1] == '/' {
+                        let mut lex_comentario = String::new();
+                        while j < caracteres.len() {
+                            lex_comentario.push(caracteres[j]);
+                            j += 1;
+                        }
+                        tokens_encontrados.push(TokenData {
+                            linea: num_linea,
+                            columna: num_columna,
+                            lexema: lex_comentario,
+                            token_id: 700,
+                            descripcion: self.unidades.get_descripcion_token(700),
+                        });
+                        continue;
+                    }
+                    
+                    // Caso B: Inicio de Comentario de Bloque
+                    if caracteres[j+1] == '*' {
+                        en_comentario_bloque = true;
+                        linea_comentario_abierto = num_linea;
+                        col_comentario_abierto = num_columna;
+                        lexema_bloque_acumulado.push('/');
+                        lexema_bloque_acumulado.push('*');
+                        j += 2;
+                        continue;
+                    }
+                }
 
                 if c.is_whitespace() {
                     j += 1;
                     continue;
                 }
 
-                if !en_comentario_bloque && j + 1 < caracteres.len() && c == '/' && (caracteres[j+1] == '/' || caracteres[j+1] == '*') {
-                    if caracteres[j+1] == '*' {
-                        linea_comentario_abierto = num_linea;
-                    }
-                    self.automata_comentario(&caracteres, &mut j, &mut en_comentario_bloque);
-                    continue;
-                }
-
-                if en_comentario_bloque {
-                    self.automata_comentario(&caracteres, &mut j, &mut en_comentario_bloque);
-                    continue;
-                }
-
+                // 2. Autómata Contextual de Headers
                 if esperando_header {
                     if c == '<' || c == '"' {
                         let cierre = if c == '<' { '>' } else { '"' };
@@ -227,6 +257,7 @@ impl AnalizadorLexico {
                     }
                 }
 
+                // 3. Autómata de Cadenas de Texto Literales "..."
                 if c == '"' {
                     let mut lex = String::new();
                     lex.push(c); j += 1;
@@ -247,6 +278,7 @@ impl AnalizadorLexico {
                     continue;
                 }
 
+                // 4. Autómata de Carácter Literal 'a'
                 if c == '\'' {
                     let mut lex = String::new();
                     lex.push(c); j += 1;
@@ -267,6 +299,7 @@ impl AnalizadorLexico {
                     continue;
                 }
 
+                // 5. Autómata de Constantes Numéricas
                 if c.is_numeric() || (c == '.' && j + 1 < caracteres.len() && caracteres[j+1].is_numeric()) {
                     let (lex, id, desc) = self.entero_real(&caracteres, &mut j);
                     if id == 0 { errores.push(format!("Línea {}, Col {}: {}", num_linea, num_columna, desc)); }
@@ -274,6 +307,7 @@ impl AnalizadorLexico {
                     continue;
                 }
 
+                // 6. Identificadores, Palabras Reservadas y Macros del Preprocesador
                 if c.is_alphabetic() || c == '#' || c == '_' {
                     let mut lex = String::new();
                     while j < caracteres.len() && self.get_alfabeto_alfanumerico(caracteres[j]) {
@@ -313,6 +347,7 @@ impl AnalizadorLexico {
                     continue;
                 }
 
+                // 7. Símbolos y Operadores
                 if self.get_alfabeto_simbolo(c) {
                     let mut lex = c.to_string();
                     j += 1;
@@ -356,7 +391,7 @@ struct MicroCApp {
     code_content: String,
     tokens: Vec<TokenData>,
     errores_log: Vec<String>,
-    archivo: String,          
+    archivo: String,
     is_modified: bool,
     analizador: AnalizadorLexico,
     ultimo_titulo: String,
@@ -380,7 +415,6 @@ impl Default for MicroCApp {
 }
 
 impl MicroCApp {
-    // --- MÉTODOS CLICK EXIGIDOS POR EL DIAGRAMA UML (Figura II) ---
     fn opc_nuevo_click(&mut self) {
         *self = Self::default();
     }
@@ -389,7 +423,7 @@ impl MicroCApp {
         if let Some(path) = rfd::FileDialog::new().add_filter("Código C", &["c", "h"]).pick_file() {
             if let Ok(contenido) = fs::read_to_string(&path) {
                 self.code_content = contenido;
-                self.archivo = path.to_string_lossy().into_owned(); 
+                self.archivo = path.to_string_lossy().into_owned();
                 self.is_modified = false;
                 self.tokens.clear();
                 self.errores_log.clear();
@@ -450,14 +484,13 @@ impl eframe::App for MicroCApp {
             self.ultimo_titulo = titulo_actual;
         }
         
-        // Barra de Herramientas del Menú (Alineado con Figura V: Archivos, Editar, Compilar, Ayuda)
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                ui.menu_button("Archivos", |ui| { 
-                    if ui.button("Nuevo Archivo").clicked() { self.opc_nuevo_click(); ui.close_menu(); }
-                    if ui.button("Abrir Archivo").clicked() { self.opc_abrir_click(); ui.close_menu(); }
-                    if ui.button("Guardar").clicked() { self.opc_guardar_click(); ui.close_menu(); }
-                    if ui.button("Guardar Como").clicked() { self.opc_guardar_como_click(); ui.close_menu(); }
+                ui.menu_button("Archivos", |ui| {
+                    if ui.button("Nuevo_").clicked() { self.opc_nuevo_click(); ui.close_menu(); }
+                    if ui.button("Abrir").clicked() { self.opc_abrir_click(); ui.close_menu(); }
+                    if ui.button("Guardar_").clicked() { self.opc_guardar_click(); ui.close_menu(); }
+                    if ui.button("Guardar Como_").clicked() { self.opc_guardar_como_click(); ui.close_menu(); }
                     ui.separator();
                     if ui.button("Salir").clicked() { self.opc_salir_click(ctx); ui.close_menu(); }
                 });
@@ -474,14 +507,11 @@ impl eframe::App for MicroCApp {
                     }
                 });
 
-
                 ui.menu_button("Ayuda", |ui| {
                     if ui.button("🌐 Manual de Usuario / Documentación").clicked() {
                         ctx.open_url(egui::OpenUrl::new_tab("https://github.com/Nv205/Analizador-Lexico-Micro-C-Nefi-Vivar.git")); 
                         ui.close_menu();
                     }
-                    
-
                 });
             });
         });
@@ -527,7 +557,14 @@ impl eframe::App for MicroCApp {
                             for t in &self.tokens {
                                 ui.label(t.linea.to_string());
                                 ui.label(t.columna.to_string());
-                                ui.label(egui::RichText::new(&t.lexema).color(egui::Color32::LIGHT_BLUE));
+                                
+                                // Pintar los comentarios con un color verde sutil diferenciado
+                                if t.token_id == 700 || t.token_id == 701 {
+                                    ui.label(egui::RichText::new(&t.lexema).color(egui::Color32::from_rgb(46, 139, 87)));
+                                } else {
+                                    ui.label(egui::RichText::new(&t.lexema).color(egui::Color32::LIGHT_BLUE));
+                                }
+                                
                                 ui.label(t.token_id.to_string());
                                 ui.label(&t.descripcion);
                                 ui.end_row();
