@@ -487,6 +487,22 @@ https://youtu.be/kGSAHHee-zs
 
 https://youtu.be/XNcZ2sGYKDk
 
+#Diagrama Fase 2
+
+<img width="1197" height="614" alt="imagen" src="https://github.com/user-attachments/assets/2b255233-8d23-483f-b1eb-c72fd3b19286" />
+
+#Automatas Fase 2
+
+Palabras Reservadas:
+<img width="912" height="351" alt="imagen" src="https://github.com/user-attachments/assets/d95a02a9-8f61-4835-bf4c-eb44b701775c" />
+
+Constantes Numericas
+<img width="1195" height="768" alt="imagen" src="https://github.com/user-attachments/assets/651b1a19-0cbb-474e-83c5-e7deb3b05a02" />
+
+Comentarios:
+<img width="1024" height="627" alt="imagen" src="https://github.com/user-attachments/assets/f92f3a53-753c-4417-90f4-fc5bd1dd0ccd" />
+
+
 
 
 
