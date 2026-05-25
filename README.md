@@ -478,7 +478,7 @@ Próximas fases posibles:
 <img width="990" height="778" alt="imagen" src="https://github.com/user-attachments/assets/c5dae85d-0da6-49c4-84c4-ff98ac3bf97e" />
 <img width="990" height="778" alt="imagen" src="https://github.com/user-attachments/assets/ccf240ff-87ec-45e8-a209-d8d96514241b" />
 
-#Video Demostrativo
+# Video Demostrativo
 
 
 https://youtu.be/uyT3AZCdOAM
@@ -489,11 +489,11 @@ https://youtu.be/XNcZ2sGYKDk
 
 https://youtu.be/kQQg3jEz-ZM
 
-#Diagrama Fase 2
+# Diagrama Fase 2
 
 <img width="1197" height="614" alt="imagen" src="https://github.com/user-attachments/assets/2b255233-8d23-483f-b1eb-c72fd3b19286" />
 
-#Automatas Fase 2
+# Automatas Fase 2
 
 Palabras Reservadas:
 <img width="912" height="351" alt="imagen" src="https://github.com/user-attachments/assets/d95a02a9-8f61-4835-bf4c-eb44b701775c" />
